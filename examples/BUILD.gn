@@ -776,6 +776,80 @@ if (is_linux || is_win) {
     ]
   }
 
+
+  rtc_executable("calldirect") {
+    testonly = true
+    sources = [
+      "peerconnection/client/conductor.cc",
+      "peerconnection/client/conductor.h",
+      "peerconnection/client/defaults.cc",
+      "peerconnection/client/defaults.h",
+      "peerconnection/client/peer_connection_client.cc",
+      "peerconnection/client/peer_connection_client.h",
+    ]
+
+    if (!build_with_chromium && is_clang) {
+      # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
+      suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
+    }
+    deps = [
+      "../api:libjingle_peerconnection_api",
+      "../api/video:video_frame_i420",
+      "../rtc_base:checks",
+      "../rtc_base:stringutils",
+    ]
+    if (is_win) {
+      sources += [
+        "peerconnection/client/flagdefs.h",
+        "peerconnection/client/main.cc",
+        "peerconnection/client/main_wnd.cc",
+        "peerconnection/client/main_wnd.h",
+      ]
+      cflags = [ "/wd4245" ]
+      configs += [ "//build/config/win:windowed" ]
+      deps += [ "../media:rtc_media_base" ]
+    }
+    if (is_linux) {
+      sources += [
+        "peerconnection/client/linux/calldirect.cc",
+        "peerconnection/client/linux/conductorcalldirect.cc",
+        "peerconnection/client/linux/main_wndcalldirect.cc",
+        "peerconnection/client/linux/main_wndcalldirect.h",
+      ]
+      cflags = [ "-Wno-deprecated-declarations" ]
+      libs = [
+        "X11",
+        "Xcomposite",
+        "Xext",
+        "Xrender",
+      ]
+      deps += [ "//build/config/linux/gtk" ]
+    }
+    configs += [ ":peerconnection_client_warnings_config" ]
+
+    deps += [
+      "../api:libjingle_peerconnection_api",
+      "../api:libjingle_peerconnection_test_api",
+      "../api/audio_codecs:builtin_audio_decoder_factory",
+      "../api/audio_codecs:builtin_audio_encoder_factory",
+      "../api/video:video_frame",
+      "../api/video_codecs:builtin_video_decoder_factory",
+      "../api/video_codecs:builtin_video_encoder_factory",
+      "../media:rtc_audio_video",
+      "../modules/audio_device:audio_device",
+      "../modules/audio_processing:audio_processing",
+      "../modules/video_capture:video_capture_module",
+      "../pc:libjingle_peerconnection",
+      "../rtc_base:rtc_base",
+      "../rtc_base:rtc_base_approved",
+      "../rtc_base:rtc_json",
+      "../system_wrappers:field_trial_default",
+      "../system_wrappers:metrics_default",
+      "../system_wrappers:runtime_enabled_features_default",
+      "//third_party/libyuv",
+    ]
+  }
+
   rtc_executable("peerconnection_server") {
     testonly = true
     sources = [
