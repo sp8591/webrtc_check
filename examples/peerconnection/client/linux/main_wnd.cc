@@ -51,7 +51,7 @@ gboolean OnKeyPressCallback(GtkWidget* widget, GdkEventKey* key,
   return false;
 }
 
-void OnRowActivatedCallback(GtkTreeView* tree_view, GtkTreePath* path,
+  void OnRowActivatedCallback(GtkTreeView* tree_view, GtkTreePath* path,
                             GtkTreeViewColumn* column, gpointer data) {
   reinterpret_cast<GtkMainWnd*>(data)->OnRowActivated(tree_view, path, column);
 }

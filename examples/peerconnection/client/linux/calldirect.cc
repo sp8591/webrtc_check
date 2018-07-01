@@ -12,7 +12,7 @@
 
 #include "examples/peerconnection/client/conductor.h"
 #include "examples/peerconnection/client/flagdefs.h"
-#include "examples/peerconnection/client/linux/main_wnd.h"
+#include "examples/peerconnection/client/linux/main_wndcalldirect.h"
 #include "examples/peerconnection/client/peer_connection_client.h"
 
 #include "rtc_base/ssladapter.h"
@@ -40,13 +40,8 @@ public:
     // g_main_context_set_poll_func.
     while (gtk_events_pending())
       gtk_main_iteration();
-
-    if (!wnd_->IsWindow() && !conductor_->connection_active() &&
-      client_ != NULL && !client_->is_connected()) {
-      message_queue_->Quit();
-  }
     return rtc::PhysicalSocketServer::Wait(0/*cms == -1 ? 1 : cms*/,
-  process_io);
+    process_io);
   }
 
 protected:
@@ -54,6 +49,8 @@ protected:
   GtkMainWnd* wnd_;
   Conductor* conductor_;
   PeerConnectionClient* client_;
+  
+
 };
 
 int main(int argc, char* argv[]) {
@@ -68,45 +65,13 @@ int main(int argc, char* argv[]) {
 #if !GLIB_CHECK_VERSION(2, 31, 0)
   g_thread_init(NULL);
 #endif
+  GtkMainWnd wnd;
 
-  rtc::FlagList::SetFlagsFromCommandLine(&argc, argv, true);
-  if (FLAG_help) {
-    rtc::FlagList::Print(NULL, false);
-    return 0;
-  }
-
-  // Abort if the user specifies a port that is outside the allowed
-  // range [1, 65535].
-  if ((FLAG_port < 1) || (FLAG_port > 65535)) {
-    printf("Error: %i is not a valid port.\n", FLAG_port);
-    return -1;
-  }
-
-  GtkMainWnd wnd(FLAG_server, FLAG_port, FLAG_autoconnect, FLAG_autocall);
   wnd.Create();
-
   CustomSocketServer socket_server(&wnd);
   rtc::AutoSocketServerThread thread(&socket_server);
-
-  rtc::InitializeSSL();
-  // Must be constructed after we set the socketserver.
-  PeerConnectionClient client;
-  rtc::scoped_refptr<Conductor> conductor(
-    new rtc::RefCountedObject<Conductor>(&client, &wnd));
-  socket_server.set_client(&client);
-  socket_server.set_conductor(conductor);
-
   thread.Run();
-
-  // gtk_main();
-  wnd.Destroy();
-
-  // TODO(henrike): Run the Gtk main loop to tear down the connection.
-  /*
-  while (gtk_events_pending()) {
-    gtk_main_iteration();
-  }
-  */
-  rtc::CleanupSSL();
+  
+  
   return 0;
 }
